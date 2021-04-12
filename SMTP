@@ -1,12 +1,12 @@
 import base64
+import ssl
 from socket import *
-
 from pip._vendor.distlib.compat import raw_input
 
 msg = "\r\n I love computer networks!"
 endmsg = "\r\n.\r\n"
 # Choose a mail server (e.g. Google mail server) and call it mailserver
-mailserver = ("mail.smtp2go.com", 587)#Fill in start   #Fill in end#
+mailserver = ("smtp.gmail.com", 587)#Fill in start   #Fill in end#
 # Create socket called clientSocket and establish a TCP connection with mailserver
 
 # #Fill in start
@@ -26,47 +26,59 @@ print(recv1)
 if recv1[:3] != '250':
     print('250 reply not received from server.')
 
+tlsCommand = 'STARTTLS \r\n'
+clientSocket.send(tlsCommand.encode())
+recv2 = clientSocket.recv(1024)
+recv2 = recv2.decode()
+print(recv2)
+if recv2[:3] != '220':
+   print('220 reply not received from server.')
+
+ssl_clientSocket = ssl.wrap_socket(clientSocket)
 
 username = "CMPE131Shifter@gmail.com"                     #the username for your server
-password = "Password131"                                    #the password for your server, changed here
+password = "stvllqyzbgogueon"                                    #the password for your server, changed here
+
 base64_str = ("\x00"+username+"\x00"+password).encode()
 base64_str = base64.b64encode(base64_str)
-authMsg = "AUTH PLAIN".encode()+base64_str+"\r\n".encode()
-clientSocket.send(authMsg)
-recv_auth = clientSocket.recv(1024)
+authMsg = "AUTH PLAIN ".encode()+base64_str+"\r\n".encode()
+ssl_clientSocket.send(authMsg)
+recv_auth = ssl_clientSocket.recv(1024)
 print(recv_auth.decode())
 if recv1[:3] != '250':
     print('250 reply not received from server.')
 
-# Send MAIL FROM command and print server response.
-# Fill in start
-mailFrom = "MAIL FROM: <CMPE131Shifter@gmail.com>  \r\n"
-clientSocket.send(mailFrom.encode())
-recv2 = clientSocket.recv(1024)
-print(recv2)
-if recv1[:3] != '250':
-    print('250 reply not received from server.')
 
-# Fill in end
+
+
+
+
+sender = "<CMPE131Shifter@gmail.com>"
+recipient = "<hernandez.veida@gmail.com>"
+
+# Send MAIL FROM command and print server response.
+mailFrom = "MAIL FROM: <CMPE131Shifter@gmail.com> \r\n"
+ssl_clientSocket.send(mailFrom.encode())
+recv2 = ssl_clientSocket.recv(1024)
+print(recv2)
+if recv2[:3] != '250':
+	print('250 reply not received from server.')
 
 # Send RCPT TO command and print server response.
-# Fill in start
-rcptTo = "RCPT TO: <CMPE131Shifter@gmail.com>  \r\n"
-clientSocket.send(rcptTo.encode())
-recv3 = clientSocket.recv(1024)
+rcptToCommand = ('RCPT TO: ' + recipient + '\r\n')
+ssl_clientSocket.write(rcptToCommand.encode())
+recv3 = ssl_clientSocket.read(1024)
 print(recv3)
-if recv1[:3] != '250':
-    print('250 reply not received from server.')
-
-# Fill in end
+if recv3[:3] != '250':
+	print ('250 reply not received from server.')
 
 # Send DATA command and print server response.
 # Fill in start
 data = "DATA\r\n"
-clientSocket.send(data.encode())
-recv4 = clientSocket.recv(1024)
+ssl_clientSocket.send(data.encode())
+recv4 = ssl_clientSocket.recv(1024)
 print(recv4)
-if recv1[:3] != '250':
+if recv2[:3] != '250':
     print('250 reply not received from server.')
 
 # Fill in end
@@ -79,12 +91,12 @@ message = raw_input("Enter your message: \r\n")
 # Message ends with a single period.
 # Fill in start
 subject = "Subject: SMTP mail client testing \r\n\r\n"
-clientSocket.send(subject.encode())
-clientSocket.send(message.encode())
-clientSocket.send(endmsg.encode())
-recv_msg = clientSocket.recv(1024)
+ssl_clientSocket.send(subject.encode())
+ssl_clientSocket.send(message.encode())
+ssl_clientSocket.send(endmsg.encode())
+recv_msg = ssl_clientSocket.recv(1024)
 print("Response after sending message body:"+recv_msg.decode())
-if recv1[:3] != '250':
+if recv2[:3] != '250':
     print('250 reply not received from server.')
 
 
@@ -92,9 +104,9 @@ if recv1[:3] != '250':
 
 # Send QUIT command and get server response.
 # Fill in start
-clientSocket.send("QUIT\r\n".encode())
-message=clientSocket.recv(1024)
+ssl_clientSocket.send("QUIT\r\n".encode())
+message=ssl_clientSocket.recv(1024)
 print (message)
-clientSocket.close()
+ssl_clientSocket.close()
 
 # Fill in end
